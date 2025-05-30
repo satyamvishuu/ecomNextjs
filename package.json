@@ -15,9 +15,10 @@
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2",
     "next": "15.3.2",
+    "ngrok": "^5.0.0-beta.2",
+    "razorpay": "^2.9.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "stripe": "^18.2.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
