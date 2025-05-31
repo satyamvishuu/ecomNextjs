@@ -1,28 +1,19 @@
-// src/app/api/download/[id]/route.js
+// /src/app/api/downloads/route.js
 import { NextResponse } from "next/server";
-import { getUserFromToken } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getUserFromToken } from "@/lib/auth";
 
-export async function GET(req, { params }) {
+export async function GET() {
   const user = await getUserFromToken();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
-
-  // Check if this user owns the product
-  const validDownload = await prisma.download.findFirst({
-    where: { userId: user.id, productId: id },
+  const downloads = await prisma.download.findMany({
+    where: { userId: user.id, status: "PAID" },
+    include: { product: true },
   });
 
-  if (!validDownload) {
-    return NextResponse.json({ error: "Access denied" }, { status: 403 });
-  }
-
-  // Send the actual file
-  const fileUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/downloads/${id}.zip`;
-
-  return NextResponse.redirect(fileUrl);
+  return NextResponse.json({ downloads });
 }

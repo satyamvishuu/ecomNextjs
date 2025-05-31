@@ -1,4 +1,3 @@
-// src/app/login/page.js
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,6 +13,8 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // <-- This is the key!
     });
 
     const data = await res.json();

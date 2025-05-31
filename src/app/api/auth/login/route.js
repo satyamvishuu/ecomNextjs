@@ -1,4 +1,4 @@
-// app/api/auth/login.js
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -12,15 +12,23 @@ export async function POST(req) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user) {
-    return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401 });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return new Response(JSON.stringify({ error: "Invalid credentials" }), { status: 401 });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
 
-  return new Response(JSON.stringify({ token, user }), { status: 200 });
+  const response = NextResponse.json({ user });
+  response.cookies.set("token", token, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+  return response;
 }

@@ -11,6 +11,7 @@ export async function GET(req) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  console.log("Add to cart: user =", user.id, "productId =", productId);
   const cart = await prisma.cart.findUnique({
     where: { userId: user.id },
     include: {
@@ -19,6 +20,8 @@ export async function GET(req) {
       },
     },
   });
+
+  console.log("Product found:", product);
 
   return NextResponse.json(cart || {});
 }

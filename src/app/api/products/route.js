@@ -1,14 +1,13 @@
 import prisma from "@/lib/prisma";
 import { getUserFromToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 // POST /api/products
 export async function POST(req) {
   try {
-    const token = cookies().get("token")?.value;
+    const token = req.cookies.get("token")?.value;
     const user = await getUserFromToken(token);
-
+  
     if (!user || user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

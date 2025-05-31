@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "", role: "user" });
+  const [form, setForm] = useState({ email: "", password: "", role: "USER" });
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -47,8 +47,8 @@ export default function RegisterPage() {
           onChange={(e) => setForm({ ...form, role: e.target.value })}
           className="w-full border px-3 py-2 rounded"
         >
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
+          <option value="USER">User</option>
+          <option value="ADMIN">Admin</option>
         </select>
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" className="w-full bg-black text-white py-2 rounded">
