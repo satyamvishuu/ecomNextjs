@@ -1,65 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 
-export default function ProductPage() {
+export default function ProductDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
   const [product, setProduct] = useState(null);
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchProductAndStatus() {
-      try {
-        // Fetch product data
-        const { data: productData } = await axios.get(`/api/products/${id}`);
-        setProduct(productData);
-
-        // Check if user purchased
-        const { data: status } = await axios.post("/api/downloads/check", { productId: id });
-        setHasPurchased(status.downloaded);
-      } catch (err) {
-        console.error("Error loading product:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchProductAndStatus();
+    if (!id) return;
+    fetch(`/api/products/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Product not found");
+        return res.json();
+      })
+      .then(setProduct)
+      .catch((err) => setError(err.message));
   }, [id]);
 
-  const handleBuy = async () => {
-    const { data } = await axios.post("/api/checkout", { productId: id });
-    if (data?.url) {
-      router.push(data.url);
-    }
-  };
+  if (error) {
+    return <div className="p-6 text-red-500">Error: {error}</div>;
+  }
 
-  const handleDownload = () => {
-    window.location.href = `/api/downloads/file?productId=${id}`;
-  };
-
-  if (loading) return <p>Loading...</p>;
-  if (!product) return <p>Product not found.</p>;
+  if (!product) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
-    <div className="max-w-xl mx-auto mt-10 p-4 border rounded-lg shadow">
+    <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">{product.title}</h1>
       <p className="mb-2">{product.description}</p>
-      <p className="mb-4 text-lg font-semibold">₹{product.price}</p>
-
-      {hasPurchased ? (
-        <button onClick={handleDownload} className="bg-green-600 text-white px-4 py-2 rounded">
-          Download
-        </button>
-      ) : (
-        <button onClick={handleBuy} className="bg-blue-600 text-white px-4 py-2 rounded">
-          Buy Now
-        </button>
-      )}
+      <p className="text-green-600 font-bold mb-2">₹{product.price}</p>
+      <a
+        href={product.fileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block bg-blue-500 text-white px-4 py-2 rounded mb-4"
+      >
+        Download/View File
+      </a>
+      <div className="mt-4 text-sm text-gray-600">
+        Uploaded by: {product.user?.email || "Unknown"}
+      </div>
+      <Link href="/products" className="block mt-6 text-blue-500 underline">
+        ← Back to Products
+      </Link>
     </div>
   );
 }

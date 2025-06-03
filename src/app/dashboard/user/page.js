@@ -36,7 +36,7 @@ export default function UserDashboard() {
             </div>
             <button
               onClick={() => {
-                // Redirect to checkout page with product ID
+                // Redirect to checkout page with product ID as query param
                 window.location.href = `/checkout?productId=${product.id}`;
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

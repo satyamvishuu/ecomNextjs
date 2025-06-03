@@ -3,7 +3,9 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "devsecret";
+const JWT_SECRET = process.env.JWT_SECRET; // No fallback!
+console.log("login",JWT_SECRET);
+
 
 export async function POST(req) {
   const body = await req.json();
@@ -22,7 +24,7 @@ export async function POST(req) {
 
   const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
 
-  const response = NextResponse.json({ user });
+  const response = NextResponse.json({ message: "Login successful" });
   response.cookies.set("token", token, {
     httpOnly: true,
     path: "/",

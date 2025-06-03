@@ -1,3 +1,4 @@
+// File: lib/getUserFromToken.js
 import prisma from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 
@@ -6,10 +7,11 @@ export async function getUserFromToken(token) {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: payload.userId } });
-    return user; // Should include .id and .role
+    return user;
   } catch (e) {
     return null;
   }
 }
+
 
 

@@ -28,5 +28,12 @@ export async function POST(req) {
     },
   });
 
+  await prisma.download.create({
+    data: {
+      userId: user.id,
+      productId: purchasedProduct.id, // Get this from cart or receipt
+    },
+  });
+
   return NextResponse.json({ success: true, message: "Payment verified successfully" });
 }

@@ -1,7 +1,7 @@
 export default function AdminLayout({ children }) {
     return (
       <div className="flex">
-        <aside className="w-60 bg-gray-800 text-white p-4">
+        <aside className="w-60 bg-black text-white p-4">
           <h2 className="text-lg font-semibold mb-4">Admin Panel</h2>
           <ul className="space-y-2">
             <li><a href="/dashboard/admin">Dashboard</a></li>

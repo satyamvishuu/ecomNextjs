@@ -14,7 +14,7 @@ export async function POST(req) {
 
     // 2. Parse payment details
     const body = await req.json();
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, currency, receipt } = body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, currency, receipt, productId } = body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !amount || !currency || !receipt) {
       return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
@@ -42,30 +42,40 @@ export async function POST(req) {
       },
     });
 
-    // 5. Fetch user's cart with items and products
-    const cart = await prisma.cart.findUnique({
-      where: { userId: user.id },
-      include: { items: { include: { product: true } } },
-    });
-
-    if (!cart || !cart.items.length) {
-      return NextResponse.json({ success: false, error: "Cart is empty" }, { status: 400 });
-    }
-
-    // 6. Create download entries for each product in cart
-    for (const item of cart.items) {
+    // 5. Unlock download(s)
+    if (productId) {
+      // Single-product Buy Now
       await prisma.download.create({
         data: {
           userId: user.id,
-          productId: item.productId,
+          productId: productId,
         },
       });
-    }
+    } else {
+      // Cart checkout: unlock all cart items
+      const cart = await prisma.cart.findUnique({
+        where: { userId: user.id },
+        include: { items: { include: { product: true } } },
+      });
 
-    // 7. Clear cart items
-    await prisma.cartItem.deleteMany({
-      where: { cartId: cart.id },
-    });
+      if (!cart || !cart.items.length) {
+        return NextResponse.json({ success: false, error: "Cart is empty" }, { status: 400 });
+      }
+
+      for (const item of cart.items) {
+        await prisma.download.create({
+          data: {
+            userId: user.id,
+            productId: item.productId,
+          },
+        });
+      }
+
+      // Clear cart items
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id },
+      });
+    }
 
     return NextResponse.json({ success: true, message: "Payment verified, downloads unlocked." });
   } catch (error) {
@@ -73,3 +83,4 @@ export async function POST(req) {
     return NextResponse.json({ success: false, error: error.message || "Internal server error" }, { status: 500 });
   }
 }
+
