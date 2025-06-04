@@ -25,6 +25,7 @@ model User {
   downloads   Download[]
 }
 
+
 model Product {
   id          String     @id @default(uuid())
   title       String

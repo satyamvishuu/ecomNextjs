@@ -12,6 +12,8 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);    // For Cart
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [downloadItems, setDownloadItems] = useState([]);
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
   const userEmail = useUserEmail();
@@ -36,7 +38,7 @@ export default function CheckoutPage() {
     }
   }, [productId]);
 
-  // Optional: Fetch cart items for cart checkout (if you want to show them)
+  // Fetch cart items for cart checkout
   useEffect(() => {
     if (!productId) {
       fetch("/api/cart", { credentials: "include" })
@@ -73,7 +75,7 @@ export default function CheckoutPage() {
     setOrderData(data);
 
     if (data.order && data.order.id) {
-      openRazorpay(data.order, userEmail);
+      openRazorpay(data.order, userEmail, data.items);
     } else {
       alert(data.error || "Order creation failed");
     }
@@ -81,7 +83,7 @@ export default function CheckoutPage() {
   };
 
   // Razorpay payment
-  const openRazorpay = (order, email) => {
+  const openRazorpay = (order, email, purchasedItems) => {
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       amount: order.amount,
@@ -101,11 +103,14 @@ export default function CheckoutPage() {
             amount: order.amount,
             currency: order.currency,
             receipt: order.receipt,
+            productId: productId || null,
           }),
         })
           .then((res) => res.json())
           .then((data) => {
             if (data.success) {
+              setPaymentSuccess(true);
+              setDownloadItems(purchasedItems);
               alert("Payment verified and order placed! 🎉");
             } else {
               alert("Payment verification failed: " + data.error);
@@ -162,13 +167,15 @@ export default function CheckoutPage() {
         <div className="mb-6 text-red-500">Your cart is empty.</div>
       )}
 
-      <button
-        onClick={createOrder}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-        disabled={loading || (!productId && cartItems.length === 0)}
-      >
-        {loading ? "Processing..." : "Pay Now"}
-      </button>
+      {!paymentSuccess && (
+        <button
+          onClick={createOrder}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          disabled={loading || (!productId && cartItems.length === 0)}
+        >
+          {loading ? "Processing..." : "Pay Now"}
+        </button>
+      )}
 
       {/* Show order details after order creation */}
       {orderData && orderData.items && (
@@ -190,9 +197,31 @@ export default function CheckoutPage() {
           </div>
         </div>
       )}
+
+      {/* Show download links after payment success */}
+      {paymentSuccess && downloadItems.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-2">Download Your Files</h2>
+          <ul>
+            {downloadItems.map((item) => (
+              <li key={item.productId} className="mb-2">
+                <a
+                  href={`/api/download/${item.productId}`}
+                  className="text-blue-600 underline"
+                  download
+                  target="_blank"
+                >
+                  Download {item.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
+
 
 
 
